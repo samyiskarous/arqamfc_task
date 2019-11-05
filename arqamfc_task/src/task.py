@@ -69,5 +69,22 @@ for shift in range(150):
     db_connection.commit()
 
 # Task - START
+# Main Functions
+def listUserSchedule(user_id):
+    user_schedule_query = """SELECT * 
+                                FROM shifts
+                                """
+    my_database.execute(user_schedule_query)
+    print(my_database.rowcount) 
+def matchIsDeliverable():
 
+def addSchedule():
+def editSchedule():
+def deleteSchedule():
+def validScheduleDate():
+    
+def listMatches():
+def getMatchDeliveryDate():
+    
+from flask import Flask
 # Task - END
