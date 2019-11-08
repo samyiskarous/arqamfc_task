@@ -6,8 +6,8 @@ from datetime import date
 db_connection = mysql.connector.connect(
         host="localhost",
         user="root",
-        passwd="root112233",
-        database="restful_apis"
+        passwd="",
+        database="arqamfc_task"
 )
 
 # 2- Database handling object
@@ -76,15 +76,15 @@ def listUserSchedule(user_id):
                                 """
     my_database.execute(user_schedule_query)
     print(my_database.rowcount) 
-def matchIsDeliverable():
+#def matchIsDeliverable():
 
-def addSchedule():
-def editSchedule():
-def deleteSchedule():
-def validScheduleDate():
+#def addSchedule():
+#def editSchedule():
+#def deleteSchedule():
+#def validScheduleDate():
     
-def listMatches():
-def getMatchDeliveryDate():
+#def listMatches():
+#def getMatchDeliveryDate():
     
 from flask import Flask
 # Task - END
