@@ -71,6 +71,7 @@ cursor = db_connection.cursor()
 # Task - START
 from flask import Flask, jsonify, request
 from flask_restful import Resource, Api
+from datetime import datetime
 
 app = Flask(__name__)
 # that Api is built on top of App
@@ -88,12 +89,42 @@ def getUserSchedule(user_id):
     rows = cursor.fetchall()
     return rows
 
+def matchIsDeliverable(match_id):
+    # If the match is deliverable, there must be 2 conditions
+    # 1- its deadline must have not come yet
+    # AND
+    # 2- there should be TWO collectors for that match, 2 conditions here too
+        # A) Night collector + Morning collector
+        # B) their date attribute MUST be before the match's deadline
+    
+    # compare match's deadline with today's date
+    # getting a certain match query
+    match_deliverable_sql = """
+                                SELECT deadline
+                                FROM matches
+                                WHERE id = 2"""
+    cursor.execute(match_deliverable_sql)
+    row = cursor.fetchone()
+    match_date_string = row[0].strftime('%Y-%m-%d')
+    match_date = datetime.strptime(match_date_string, '%Y-%m-%d')
+    # get the current date
+    if(datetime.now() > match_date):
+        # Match deadline has not come yet
+        
+        # Now check if we have TWO collectors for this match
+        # TWO collectors with a date BEFORE match's deadline
+        
+        
+    else:
+        return False
+
 class Schedule(Resource):
     def get(self, user_id):
         # get the user_id
         result = getUserSchedule(user_id)
         response = jsonify({"Schedule for User ({})".format(user_id): result})
         return response
+    
     
 api.add_resource(Schedule, '/schedule/user/<int:user_id>')
 
