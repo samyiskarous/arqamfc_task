@@ -259,7 +259,7 @@ class Schedule(Resource):
     def get(self, user_id):
         # get the user_id
         result = getUserSchedule(user_id)
-        response = jsonify({"Schedule for User ({})".format(user_id): result})
+        response = jsonify({"data": result})
         return response
     
     # add a schedule
@@ -285,7 +285,7 @@ class Schedule(Resource):
 class Match(Resource):
     def get(self):
         matches_list = getPrepareMatchesList()
-        response = jsonify({"Matches List": matches_list})
+        response = jsonify({"data": matches_list})
         return response
 
 class Database(Resource):
