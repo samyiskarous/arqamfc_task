@@ -92,6 +92,7 @@ def getUserSchedule(user_id):
     rows = cursor.fetchall()
     return rows
 
+# Verify whether a match can be delivered, or will be delayed 
 def matchIsDeliverable(match_id):
     # If the match is deliverable, there must be 2 conditions
     # 1- its deadline must have not come yet
@@ -149,6 +150,7 @@ def matchIsDeliverable(match_id):
         # Match is NOT deliverable - Deadline
         return 1
 
+# Prepare a list of matches and whether they're deliverable or not
 def getPrepareMatchesList():
     get_all_matches_sql = """
                             SELECT *
@@ -164,6 +166,8 @@ def getPrepareMatchesList():
         prepared_matches.append([match[0], match_status])
         
     return prepared_matches
+
+# Validate the schdule request data
 def validSchedule(schedule_data, method):
     if(method == 'insert'):
         validation_schema = {
@@ -218,12 +222,26 @@ def createNewSchedule(schedule_data):
     cursor.execute(create_new_schedule_sql)
     db_connection.commit()
     
-    return True
+def deleteSchedule(schedule_data):
+    validation_schema = {
+                            'shift_id' : {
+                                        'type': 'integer',
+                                        'required': True
+                                    }
+                            }
+    validator = Validator(validation_schema)
+    if(validator.validate(schedule_data)):
+        delete_schedule_sql = """
+                                DELETE FROM shifts
+                                WHERE id = {}
+                                """.format(schedule_data['shift_id'])
+        cursor.execute(delete_schedule_sql)
+        db_connection.commit()
+    else:
+        raise ValueError(json.dumps(validator.errors))
+
 class Schedule(Resource):
-    
-   
-            
-    # get the schedule of a user
+    # get the schedule of a collector
     def get(self, user_id):
         # get the user_id
         result = getUserSchedule(user_id)
@@ -234,14 +252,20 @@ class Schedule(Resource):
         schedule_data = request.get_json()
         if(validSchedule(schedule_data, 'insert')):
             createNewSchedule(schedule_data)
+            return {"data": schedule_data}, 201
     # edit a schedule
-#    def put(self):
-#        schedule_data = request.get_json()
-#        if(validSchedule(schedule_data, 'update')):
+    # def put(self):
+    # schedule_data = request.get_json()
+    # if(validSchedule(schedule_data, 'update')):
+    # if()
             
-        
     # delete a schedulte
-    # def delete(self, shift_id):
+    def delete(self):
+        schedule_data = request.get_json()
+        deleteSchedule(schedule_data)
+        
+        return {"data": {"message": "Schedule ({}) has been deleted!".format(schedule_data['shift_id'])}}
+        
     
 class Match(Resource):
     def get(self):
@@ -250,7 +274,7 @@ class Match(Resource):
         return response
         
 # API Endpoints
-api.add_resource(Schedule, '/schedules/users/<int:user_id>', '/schedules/<int:shift_id>', '/schedules')
+api.add_resource(Schedule, '/schedules/users/<int:user_id>', '/schedules')
 api.add_resource(Match, '/matches')
 
 if __name__ == '__main__':
