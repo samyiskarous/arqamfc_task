@@ -14,59 +14,60 @@ db_connection = mysql.connector.connect(
 cursor = db_connection.cursor()
 #
 ## 3- Create the needed tables
-#create_shifts_table_query = """CREATE TABLE shifts (
-#                                    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-#                                    user_id INT(10) UNSIGNED NOT NULL,
-#                                    date DATE NOT NULL,
-#                                    type ENUM("morning", "night") NOT NULL
-#                                )"""
-#
-#cursor.execute(create_shifts_table_query);
-#
-#create_matches_table_query = """CREATE TABLE matches (
-#                                    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-#                                    deadline DATE NOT NULL
-#                                )"""
-#
-#cursor.execute(create_matches_table_query);
-#
-## 4- commit the tables to database
-#db_connection.commit()
-#
-#
+def createDatabaseTables():
+    
+    create_shifts_table_query = """CREATE TABLE shifts (
+                                        id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                                        user_id INT(10) UNSIGNED NOT NULL,
+                                        date DATE NOT NULL,
+                                        type ENUM("morning", "night") NOT NULL
+                                    )"""
+    
+    cursor.execute(create_shifts_table_query);
+    create_matches_table_query = """CREATE TABLE matches (
+                                        id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                                        deadline DATE NOT NULL
+                                    )"""
+    
+    cursor.execute(create_matches_table_query);
+    
+    # 4- commit the tables to database
+    db_connection.commit()
+
 ## 5- start generating fake data 
-#
-## myFactory for generating fake data
-#myFactory = Faker()
-#
-## generate fake data for matches table
-#for match in range(100):
-#    deadline = myFactory.date_between_dates(date_start=date(2010, 7, 1), date_end=date(2010, 7, 20))
-#    
-#    new_match_query = """INSERT INTO matches 
-#                            (deadline) VALUES ('{}')""".format(deadline)
-#                            
-#    cursor.execute(new_match_query)
-#    
-#    db_connection.commit()
-#    
-# generate fake data for shifts table
-#for shift in range(150):
-#    if((shift % 2) == 0):
-#        shift_type = "morning"
-#    else:
-#        shift_type = "night"
-#    
-#    shift_date = myFactory.date_between_dates(date_start=date(2010, 7, 1), date_end=date(2010, 7, 20))
-#    
-#    user_id = myFactory.random_int()
-#    
-#    new_shift_query = """INSERT INTO shifts 
-#                            (user_id, date, type) VALUES ({}, '{}', '{}')""".format(user_id, shift_date, shift_type)
-#                            
-#    cursor.execute(new_shift_query)
-#    
-#    db_connection.commit()
+
+def seedDataForTesting():
+    # myFactory for generating fake data
+    myFactory = Faker()
+    
+    # generate fake data for matches table
+    for match in range(100):
+        deadline = myFactory.date_between_dates(date_start=date(2010, 7, 1), date_end=date(2010, 7, 20))
+        
+        new_match_query = """INSERT INTO matches 
+                                (deadline) VALUES ('{}')""".format(deadline)
+                                
+        cursor.execute(new_match_query)
+        
+        db_connection.commit()
+        
+    # generate fake data for shifts table
+    for shift in range(150):
+        if((shift % 2) == 0):
+            shift_type = "morning"
+        else:
+            shift_type = "night"
+        
+        shift_date = myFactory.date_between_dates(date_start=date(2010, 7, 1), date_end=date(2010, 7, 20))
+        
+        user_id = myFactory.random_int()
+        
+        new_shift_query = """INSERT INTO shifts 
+                                (user_id, date, type) VALUES ({}, '{}', '{}')""".format(user_id, shift_date, shift_type)
+                                
+        cursor.execute(new_shift_query)
+        
+        db_connection.commit()
 
 # Task - START
 from flask import Flask, jsonify, request
@@ -266,16 +267,23 @@ class Schedule(Resource):
         
         return {"data": {"message": "Schedule ({}) has been deleted!".format(schedule_data['shift_id'])}}
         
-    
 class Match(Resource):
     def get(self):
         matches_list = getPrepareMatchesList()
         response = jsonify({"Matches List": matches_list})
         return response
+
+class Database(Resource):
+    def get(self):
+        createDatabaseTables()
+        seedDataForTesting()
+        
+        return {"data": {"message": "Database Tables created and Fake data inserted into it!"}}
         
 # API Endpoints
 api.add_resource(Schedule, '/schedules/users/<int:user_id>', '/schedules')
 api.add_resource(Match, '/matches')
+api.add_resource(Database, '/database')
 
 if __name__ == '__main__':
     app.run(debug=True)
