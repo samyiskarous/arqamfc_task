@@ -70,9 +70,11 @@ cursor = db_connection.cursor()
 
 # Task - START
 from flask import Flask, jsonify, request
-from flask_restful import Resource, Api
+from flask_restful import Resource, Api, reqparse
 from datetime import datetime
 import array as arr
+from cerberus import Validator
+import json
 
 app = Flask(__name__)
 # that Api is built on top of App
@@ -162,8 +164,65 @@ def getPrepareMatchesList():
         prepared_matches.append([match[0], match_status])
         
     return prepared_matches
-
+def validSchedule(schedule_data, method):
+    if(method == 'insert'):
+        validation_schema = {
+                            'user_id': {
+                                        'type': 'integer',
+                                        'required': True
+                                    },
+                            'date': {
+                                        'type': 'string',
+                                        'required': True
+                                    },
+                            'type': {
+                                        'type': 'string',
+                                        'required': True
+                                    },
+                            }    
+    else:
+        validation_schema = {
+                            'schedule_id' : {
+                                        'type': 'integer',
+                                        'required': True
+                                    },
+                            'user_id': {
+                                        'type': 'integer',
+                                        'required': False
+                                    },
+                            'date': {
+                                        'type': 'string',
+                                        'required': False
+                                    },
+                            'type': {
+                                        'type': 'string',
+                                        'required': False
+                                    },
+                            }
+            
+    validator = Validator(validation_schema)
+    if(validator.validate(schedule_data)):
+        return True
+    else:
+        raise ValueError(json.dumps(validator.errors))
+        
+def createNewSchedule(schedule_data):
+    create_new_schedule_sql = """
+                            INSERT INTO shifts
+                            (user_id, date, type)
+                            VALUES
+                            ({}, '{}', '{}')
+                            """.format(schedule_data['user_id'], 
+                                       schedule_data['date'], 
+                                    schedule_data['type'])
+    cursor.execute(create_new_schedule_sql)
+    db_connection.commit()
+    
+    return True
 class Schedule(Resource):
+    
+   
+            
     # get the schedule of a user
     def get(self, user_id):
         # get the user_id
@@ -171,11 +230,16 @@ class Schedule(Resource):
         response = jsonify({"Schedule for User ({})".format(user_id): result})
         return response
     # add a schedule
-    # def post(self):
-        
+    def post(self):
+        schedule_data = request.get_json()
+        if(validSchedule(schedule_data, 'insert')):
+            createNewSchedule(schedule_data)
     # edit a schedule
-    # def put(self, shift_id):
-    
+#    def put(self):
+#        schedule_data = request.get_json()
+#        if(validSchedule(schedule_data, 'update')):
+            
+        
     # delete a schedulte
     # def delete(self, shift_id):
     
