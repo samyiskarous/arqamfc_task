@@ -1,6 +1,11 @@
 import mysql.connector
 from faker import Faker
 from datetime import date
+from flask import Flask, jsonify, request
+from flask_restful import Resource, Api
+from datetime import datetime
+from cerberus import Validator
+import json
 
 # 1- Set the database connection parameters
 db_connection = mysql.connector.connect(
@@ -70,12 +75,6 @@ def seedDataForTesting():
         db_connection.commit()
 
 # Task - START
-from flask import Flask, jsonify, request
-from flask_restful import Resource, Api, reqparse
-from datetime import datetime
-import array as arr
-from cerberus import Validator
-import json
 
 app = Flask(__name__)
 # that Api is built on top of App
