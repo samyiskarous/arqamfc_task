@@ -102,20 +102,48 @@ def matchIsDeliverable(match_id):
     match_deliverable_sql = """
                                 SELECT deadline
                                 FROM matches
-                                WHERE id = 2"""
+                                WHERE id = {}""".format(match_id)
     cursor.execute(match_deliverable_sql)
-    row = cursor.fetchone()
-    match_date_string = row[0].strftime('%Y-%m-%d')
-    match_date = datetime.strptime(match_date_string, '%Y-%m-%d')
+    match = cursor.fetchone()
+    match_deadline_string = match[0].strftime('%Y-%m-%d')
+    match_deadline = datetime.strptime(match_deadline_string, '%Y-%m-%d')
     # get the current date
-    if(datetime.now() > match_date):
+    if(datetime.now() > match_deadline):
         # Match deadline has not come yet
-        
+    
         # Now check if we have TWO collectors for this match
         # TWO collectors with a date BEFORE match's deadline
         
+        #count the morning collectors
+        match_morning_coll_by_date_sql = """
+                                            SELECT count(*) 
+                                            FROM shifts
+                                            WHERE date <= '{}'
+                                            AND type = 'morning'
+                                            """.format(match_deadline_string)
+        cursor.execute(match_morning_coll_by_date_sql)
+        match_morning_coll_count = cursor.fetchone()[0]
         
+        #count the night collectors
+        match_night_coll_by_date_sql = """
+                                            SELECT count(*)
+                                            FROM shifts
+                                            WHERE date <= '{}'
+                                            AND type = 'night'
+                                            """.format(match_deadline_string)
+        cursor.execute(match_night_coll_by_date_sql)
+        match_night_coll_count = cursor.fetchone()[0]
+        
+        match_collectors_count = match_morning_coll_count + match_night_coll_count
+        
+        if(match_collectors_count == 2):
+            # Match IS deliverable
+            return True
+        else:
+            # Match is NOT deliverable
+            return False            
     else:
+        # Match is NOT deliverable
         return False
 
 class Schedule(Resource):
