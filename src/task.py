@@ -127,11 +127,11 @@ def matchIsDeliverable(match_id):
         
         #count the night collectors
         match_night_coll_by_date_sql = """
-                                            SELECT count(*)
-                                            FROM shifts
-                                            WHERE date <= '{}'
-                                            AND type = 'night'
-                                            """.format(match_deadline_string)
+                                        SELECT count(*)
+                                        FROM shifts
+                                        WHERE date <= '{}'
+                                        AND type = 'night'
+                                        """.format(match_deadline_string)
         cursor.execute(match_night_coll_by_date_sql)
         match_night_coll_count = cursor.fetchone()[0]
         
@@ -149,12 +149,12 @@ def matchIsDeliverable(match_id):
 
 def getPrepareMatchesList():
     get_all_matches_sql = """
-                                SELECT *
-                                FROM matches"""
+                            SELECT *
+                            FROM matches"""
     cursor.execute(get_all_matches_sql)
     matches = cursor.fetchall()
-    prepared_matches = []
     
+    prepared_matches = []
     match_statuses = ["Deliverable", "Delayed - Deadline", "Delayed - Collectors"]
 
     for match in matches:
@@ -164,11 +164,20 @@ def getPrepareMatchesList():
     return prepared_matches
 
 class Schedule(Resource):
+    # get the schedule of a user
     def get(self, user_id):
         # get the user_id
         result = getUserSchedule(user_id)
         response = jsonify({"Schedule for User ({})".format(user_id): result})
         return response
+    # add a schedule
+    # def post(self):
+        
+    # edit a schedule
+    # def put(self, shift_id):
+    
+    # delete a schedulte
+    # def delete(self, shift_id):
     
 class Match(Resource):
     def get(self):
@@ -176,7 +185,8 @@ class Match(Resource):
         response = jsonify({"Matches List": matches_list})
         return response
         
-api.add_resource(Schedule, '/schedule/user/<int:user_id>')
+# API Endpoints
+api.add_resource(Schedule, '/schedules/users/<int:user_id>', '/schedules/<int:shift_id>', '/schedules')
 api.add_resource(Match, '/matches')
 
 if __name__ == '__main__':
