@@ -72,6 +72,7 @@ cursor = db_connection.cursor()
 from flask import Flask, jsonify, request
 from flask_restful import Resource, Api
 from datetime import datetime
+import array as arr
 
 app = Flask(__name__)
 # that Api is built on top of App
@@ -136,15 +137,31 @@ def matchIsDeliverable(match_id):
         
         match_collectors_count = match_morning_coll_count + match_night_coll_count
         
-        if(match_collectors_count == 2):
+        if(match_collectors_count >= 2):
             # Match IS deliverable
-            return True
+            return 0
         else:
-            # Match is NOT deliverable
-            return False            
+            # Match is NOT deliverable - Lack of Collectors
+            return 2            
     else:
-        # Match is NOT deliverable
-        return False
+        # Match is NOT deliverable - Deadline
+        return 1
+
+def getPrepareMatchesList():
+    get_all_matches_sql = """
+                                SELECT *
+                                FROM matches"""
+    cursor.execute(get_all_matches_sql)
+    matches = cursor.fetchall()
+    prepared_matches = []
+    
+    match_statuses = ["Deliverable", "Delayed - Deadline", "Delayed - Collectors"]
+
+    for match in matches:
+        match_status = match_statuses[matchIsDeliverable(match[0])]
+        prepared_matches.append([match[0], match_status])
+        
+    return prepared_matches
 
 class Schedule(Resource):
     def get(self, user_id):
@@ -153,8 +170,14 @@ class Schedule(Resource):
         response = jsonify({"Schedule for User ({})".format(user_id): result})
         return response
     
-    
+class Match(Resource):
+    def get(self):
+        matches_list = getPrepareMatchesList()
+        response = jsonify({"Matches List": matches_list})
+        return response
+        
 api.add_resource(Schedule, '/schedule/user/<int:user_id>')
+api.add_resource(Match, '/matches')
 
 if __name__ == '__main__':
     app.run(debug=True)
