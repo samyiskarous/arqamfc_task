@@ -187,21 +187,21 @@ def validSchedule(schedule_data, method):
                             }    
     else:
         validation_schema = {
-                            'schedule_id' : {
+                            'shift_id' : {
                                         'type': 'integer',
                                         'required': True
                                     },
                             'user_id': {
                                         'type': 'integer',
-                                        'required': False
+                                        'required': True
                                     },
                             'date': {
                                         'type': 'string',
-                                        'required': False
+                                        'required': True
                                     },
                             'type': {
                                         'type': 'string',
-                                        'required': False
+                                        'required': True
                                     },
                             }
             
@@ -221,6 +221,19 @@ def createNewSchedule(schedule_data):
                                        schedule_data['date'], 
                                     schedule_data['type'])
     cursor.execute(create_new_schedule_sql)
+    db_connection.commit()
+    
+def updateSchedule(schedule_data):
+    update_schedule_sql = """
+                            UPDATE shifts
+                            SET user_id = {}, date = '{}', type = '{}'
+                            WHERE id = {}
+                            """.format(
+                                    schedule_data['user_id'], 
+                                    schedule_data['date'], 
+                                    schedule_data['type'],
+                                    schedule_data['shift_id'])
+    cursor.execute(update_schedule_sql)
     db_connection.commit()
     
 def deleteSchedule(schedule_data):
@@ -248,23 +261,25 @@ class Schedule(Resource):
         result = getUserSchedule(user_id)
         response = jsonify({"Schedule for User ({})".format(user_id): result})
         return response
+    
     # add a schedule
     def post(self):
         schedule_data = request.get_json()
         if(validSchedule(schedule_data, 'insert')):
             createNewSchedule(schedule_data)
             return {"data": schedule_data}, 201
+        
     # edit a schedule
-    # def put(self):
-    # schedule_data = request.get_json()
-    # if(validSchedule(schedule_data, 'update')):
-    # if()
+    def put(self):
+        schedule_data = request.get_json()
+        if(validSchedule(schedule_data, 'update')):
+            updateSchedule(schedule_data)
+            return {"data": schedule_data}
             
     # delete a schedulte
     def delete(self):
         schedule_data = request.get_json()
         deleteSchedule(schedule_data)
-        
         return {"data": {"message": "Schedule ({}) has been deleted!".format(schedule_data['shift_id'])}}
         
 class Match(Resource):
@@ -283,19 +298,10 @@ class Database(Resource):
 # API Endpoints
 api.add_resource(Schedule, '/schedules/users/<int:user_id>', '/schedules')
 api.add_resource(Match, '/matches')
+# for database creation and seeding
 api.add_resource(Database, '/database')
 
 if __name__ == '__main__':
     app.run(debug=True)
 
-# Main Functions
-#def matchIsDeliverable():
-
-#def addSchedule():
-#def editSchedule():
-#def deleteSchedule():
-#def validScheduleDate():
-    
-#def listMatches():
-#def getMatchDeliveryDate():
 # Task - END
