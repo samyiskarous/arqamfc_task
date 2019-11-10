@@ -147,7 +147,7 @@ def matchIsDeliverable(match_id):
         return 1
 
 # Prepare a list of matches and whether they're deliverable or not
-def getPrepareMatchesList():
+def getPreparedMatchesList():
     get_all_matches_sql = """
                             SELECT *
                             FROM matches"""
@@ -253,7 +253,6 @@ def deleteSchedule(schedule_data):
 class Schedule(Resource):
     # get the schedule of a collector
     def get(self, user_id):
-        # get the user_id
         result = getUserSchedule(user_id)
         response = jsonify({"data": result})
         return response
@@ -284,7 +283,7 @@ class Schedule(Resource):
         
 class Match(Resource):
     def get(self):
-        matches_list = getPrepareMatchesList()
+        matches_list = getPreparedMatchesList()
         response = jsonify({"data": matches_list})
         return response
 
