@@ -1,0 +1,2 @@
+1- Just run "python task.py" in the terminal
+2- Once ran successfully, call the "/database" GET API to initialize the database tables and seed the data
