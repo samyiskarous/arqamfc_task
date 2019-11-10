@@ -47,7 +47,7 @@ def seedDataForTesting():
     
     # generate fake data for matches table
     for match in range(100):
-        deadline = myFactory.date_between_dates(date_start=date(2010, 7, 1), date_end=date(2010, 7, 20))
+        deadline = myFactory.date_between_dates(date_start=date(2019, 11, 1), date_end=date(2019, 11, 20))
         
         new_match_query = """INSERT INTO matches 
                                 (deadline) VALUES ('{}')""".format(deadline)
@@ -57,18 +57,19 @@ def seedDataForTesting():
         db_connection.commit()
         
     # generate fake data for shifts table
-    for shift in range(150):
+    for shift in range(20):
         if((shift % 2) == 0):
             shift_type = "morning"
         else:
             shift_type = "night"
         
-        shift_date = myFactory.date_between_dates(date_start=date(2010, 7, 1), date_end=date(2010, 7, 20))
+        shift_date = myFactory.date_between_dates(date_start=date(2019, 11, 17), date_end=date(2019, 11, 20))
         
         user_id = myFactory.random_int()
         
         new_shift_query = """INSERT INTO shifts 
-                                (user_id, date, type) VALUES ({}, '{}', '{}')""".format(user_id, shift_date, shift_type)
+                                (user_id, date, type) VALUES ({}, '{}', '{}')""".format(
+                                        user_id, shift_date, shift_type)
                                 
         cursor.execute(new_shift_query)
         
@@ -112,7 +113,7 @@ def matchIsDeliverable(match_id):
     match_deadline_string = match[0].strftime('%Y-%m-%d')
     match_deadline = datetime.strptime(match_deadline_string, '%Y-%m-%d')
     # get the current date
-    if(datetime.now() > match_deadline):
+    if(datetime.now() < match_deadline):
         # Match deadline has not come yet
     
         # Now check if we have TWO collectors for this match
@@ -159,7 +160,7 @@ def getPrepareMatchesList():
     matches = cursor.fetchall()
     
     prepared_matches = []
-    match_statuses = ["Deliverable", "Delayed - Deadline", "Delayed - Collectors"]
+    match_statuses = ["Deliverable", "Delayed - Deadline", "Delayed - No Collectors"]
 
     for match in matches:
         match_status = match_statuses[matchIsDeliverable(match[0])]
@@ -208,7 +209,7 @@ def validSchedule(schedule_data, method):
     if(validator.validate(schedule_data)):
         return True
     else:
-        raise ValueError(json.dumps(validator.errors))
+        return False
         
 def createNewSchedule(schedule_data):
     create_new_schedule_sql = """
@@ -251,7 +252,7 @@ def deleteSchedule(schedule_data):
         cursor.execute(delete_schedule_sql)
         db_connection.commit()
     else:
-        raise ValueError(json.dumps(validator.errors))
+        return {"error": {"message": validator.errors}}
 
 class Schedule(Resource):
     # get the schedule of a collector
@@ -267,6 +268,8 @@ class Schedule(Resource):
         if(validSchedule(schedule_data, 'insert')):
             createNewSchedule(schedule_data)
             return {"data": schedule_data}, 201
+        else:
+            return {"error": {"message": "Invalid Input"}}
         
     # edit a schedule
     def put(self):
@@ -274,7 +277,8 @@ class Schedule(Resource):
         if(validSchedule(schedule_data, 'update')):
             updateSchedule(schedule_data)
             return {"data": schedule_data}
-            
+        else:
+            return {"error": {"message": "Invalid Input"}} 
     # delete a schedulte
     def delete(self):
         schedule_data = request.get_json()
