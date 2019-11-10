@@ -7,7 +7,7 @@ from datetime import datetime
 from cerberus import Validator
 import json
 
-# 1- Set the database connection parameters
+# Set the database connection parameters
 db_connection = mysql.connector.connect(
         host="localhost",
         user="root",
@@ -15,10 +15,11 @@ db_connection = mysql.connector.connect(
         database="arqamfc_task"
 )
 
-# 2- Database handling object
+# Database handling object
 cursor = db_connection.cursor()
-#
-## 3- Create the needed tables
+
+# Helper Functions - START
+# Create the needed tables
 def createDatabaseTables():
     
     create_shifts_table_query = """CREATE TABLE shifts (
@@ -36,11 +37,10 @@ def createDatabaseTables():
     
     cursor.execute(create_matches_table_query);
     
-    # 4- commit the tables to database
+    # commit the tables to database
     db_connection.commit()
 
-## 5- start generating fake data 
-
+# start generating fake data 
 def seedDataForTesting():
     # myFactory for generating fake data
     myFactory = Faker()
@@ -75,12 +75,7 @@ def seedDataForTesting():
         
         db_connection.commit()
 
-# Task - START
-
-app = Flask(__name__)
-# that Api is built on top of App
-api = Api(app)
-
+# Retrieve the schedule of a collector
 def getUserSchedule(user_id):
     # Query for getting the schedule for a certain collector
     get_collector_schedule_sql = """
@@ -253,6 +248,7 @@ def deleteSchedule(schedule_data):
         db_connection.commit()
     else:
         return {"error": {"message": validator.errors}}
+# Helper Functions - END
 
 class Schedule(Resource):
     # get the schedule of a collector
@@ -279,6 +275,7 @@ class Schedule(Resource):
             return {"data": schedule_data}
         else:
             return {"error": {"message": "Invalid Input"}} 
+   
     # delete a schedulte
     def delete(self):
         schedule_data = request.get_json()
@@ -298,6 +295,10 @@ class Database(Resource):
         
         return {"data": {"message": "Database Tables created and Fake data inserted into it!"}}
         
+app = Flask(__name__)
+# that Api is built on top of App
+api = Api(app)
+
 # API Endpoints
 api.add_resource(Schedule, '/schedules/users/<int:user_id>', '/schedules')
 api.add_resource(Match, '/matches')
@@ -306,5 +307,3 @@ api.add_resource(Database, '/database')
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-# Task - END
